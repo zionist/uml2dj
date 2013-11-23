@@ -1,9 +1,8 @@
 import re
-import os
 import libxml2;
-from optparse import OptionParser
 
 from uml2dj.common.model import Model, Field, PkField
+
 
 # value of property
 def prop_to_str(s):
@@ -14,18 +13,12 @@ def prop_to_str(s):
     s = re.sub(r'&lt.*$', '', s)
     return s
 
-def parse(options, logger, args):
-    """
-    parse - parse UML 2.0 xml file and write django models
-       usage: parse <file_name>"""
-    
-    if len(args) != 1 or not os.path.isfile(args[0]):
-        print "Please specify one correct file for parse"
+def parse(options, logger, parse_file):
 
     base_models = []
     child_models = []
     choices = []
-    doc = libxml2.parseFile(args[0])
+    doc = libxml2.parseFile(parse_file)
     ctxt = doc.xpathNewContext()
     # for correct work with attrs in different xml namespace
     # for example <packagedElement xsi:type="uml:Class"..
@@ -34,8 +27,15 @@ def parse(options, logger, args):
     for model in ctxt.xpathEval("//packagedElement"):
         model_name = model.hasProp("name")
         if model_name:
-            # get name from xml node 
+            # get name and app_label from xml node 
             model_obj = Model(prop_to_str(model_name))
+            app_label =  model.xpathEval("ownedComment")
+            if app_label:
+                app_label = app_label[0].hasProp("body")
+                app_label = re.sub(r'"', '', app_label.__str__())
+                app_label = re.sub(r'&amp;#39;', '\"', app_label)
+                app_label = re.sub(r'body=', '', app_label)
+                model_obj.app_label = app_label
             # find fields
             for field in model.xpathEval("ownedAttribute"):
                 typ = field.hasProp("type")
@@ -83,12 +83,4 @@ def parse(options, logger, args):
     models = []
     models.extend(base_models)
     models.extend(child_models)
-    for model in models:
-        print model.gen_fields()
-
-    # print choices
-    for model in models:
-        for field in model.fields:
-            if field.choices:
-                print re.sub(r':', ' =', field.choices)
-    
+    return models

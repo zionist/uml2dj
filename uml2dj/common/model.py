@@ -21,14 +21,18 @@ class Model:
         self.name = name
         self.parents = []
         self.fields = []
+        self.app_label = ""
         # for pk links to another object
         self.pks = []
 
     def _gen_header(self):
         meta_string = ""
+        appl_label_string = ""
         unicode_string = """
     def __unicode__(self):
         return '%s' % self.id"""
+        if self.app_label:
+            appl_label_string = "%s" % self.app_label
         if self.name.startswith("Base"):
             meta_string = """
     class Meta:
@@ -36,8 +40,8 @@ class Model:
         else:
             meta_string = """
     class Meta:
-        app_label = "core"
-        verbose_name = "%s" """ % (self.name)
+       %s
+        verbose_name = "%s" """ % (appl_label_string, self.name)
         if not self.parents:
             return """
 class %s(models.Model):
@@ -116,6 +120,19 @@ class %s(%s):
         return """
     %s = models.DateTimeField(%s)""" % (name, kwargs_string)
 
+    def gen_form(self):
+        return """
+class %sForm(forms.ModelForm):
+    class Meta:
+        model = %s """ % (self.name, self.name)
+
+    def gen_admin(self):
+        return """
+class %sAdmin(admin.ModelAdmin):
+    pass
+
+admin.site.register(%s, %sAdmin)""" % (self.name, self.name, self.name)
+        
     def gen_fields(self):
         fields_text = "\n"
         for pk_field in self.pks:

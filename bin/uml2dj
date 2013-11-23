@@ -25,6 +25,13 @@ def main():
         print "Please specify command"
         print parser.print_help()
         exit(1)
+
+    if args[0] not in AVAILABLE_COMMANDS:
+        print "Wrong command"
+        print parser.print_help()
+        exit(1)
+
+    func = getattr(commands, args[0])
         
     if options.verbose:
         logger = get_logger(logging.DEBUG)
