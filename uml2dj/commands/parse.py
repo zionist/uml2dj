@@ -44,6 +44,10 @@ def parse(options, logger, args):
                     # find packagEdelement with this type
                     el = ctxt.xpathEval('//packagedElement[@xmi:id="%s"]' % typ)
                     pk_field_obj = PkField(prop_to_str(field.hasProp("name")))
+                    # Find all comments and convert them to help_text
+                    comment = field.xpathEval("ownedComment")
+                    if comment:
+                        pk_field_obj.help_text = ('"%s"' % prop_to_str(comment[0].hasProp("body")))
                     pk_field_obj.point_to = prop_to_str(el[0].hasProp("name"))
                     model_obj.pks.append(pk_field_obj)
                 # We have no type attr, but we have child type tag for simple type

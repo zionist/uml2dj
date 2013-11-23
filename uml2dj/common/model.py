@@ -12,6 +12,7 @@ class PkField:
     def __init__(self, name):
         self.name = name
         self.point_to = ""
+        self.help_text  = ""
 
 
 class Model:
@@ -50,17 +51,16 @@ class %s(%s):
         if kwargs:
             for k, v in kwargs.iteritems():
                 kwargs_string += "%s=%s, " % (k, v)
-            return """
-    %s = models.ForeignKey(%s, %s)""" % (name, point_to, kwargs)
-        else:
-            return """
-    %s = models.ForeignKey(%s)""" % (name, point_to)
+        return """
+    %s = models.ForeignKey(%s, %s)""" % (name, point_to, kwargs_string)
     
     def _gen_char_field(self, name, **kwargs):
         if "max_length" not in kwargs:
             kwargs["max_length"] = CHARFIELD_MAX_LENGTH
         if "blank" not in kwargs:
             kwargs["blank"] = "True"
+        if "null" not in kwargs:
+            kwargs["null"] = "True"
         kwargs_string = ""
         for k, v in kwargs.iteritems():
             kwargs_string += "%s=%s, " % (k, v)
@@ -68,10 +68,10 @@ class %s(%s):
     %s = models.CharField(%s)""" % (name, kwargs_string)
 
     def _gen_integer_field(self, name, **kwargs):
-        if "default" not in kwargs:
-            kwargs["default"] = 0
         if "blank" not in kwargs:
             kwargs["blank"] = "True"
+        if "null" not in kwargs:
+            kwargs["null"] = "True"
         kwargs_string = ""
         for k, v in kwargs.iteritems():
             kwargs_string += "%s=%s, " % (k, v)
@@ -102,12 +102,15 @@ class %s(%s):
     def gen_fields(self):
         fields_text = "\n"
         for pk_field in self.pks:
-            fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to)
+            if pk_field.help_text:
+                fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to, help_text=pk_field.help_text, verbose_name=pk_field.help_text)
+            else:
+                fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to)
         for field in self.fields:
             # print field.__dict__
             if field.typ == "Char" or field.typ == "String":
                 if field.help_text:
-                    fields_text += self._gen_char_field(field.name, help_text=field.help_text)
+                    fields_text += self._gen_char_field(field.name, help_text=field.help_text, verbose_name=field.help_text)
                 else:
                     fields_text += self._gen_char_field(field.name)
             if field.typ == "Integer":
