@@ -28,6 +28,17 @@ class %s(models.Model):
     class Meta:
         app_label = "core"
         verbose_name = "%s" """ % (self.name, self.name)
+
+    def _gen_pk_field(self, name, point_to, **kwargs):
+        kwargs_string = ""
+        if kwargs:
+            for k, v in kwargs.iteritems():
+                kwargs_string += "%s=%s, " % (k, v)
+            return """
+    %s = models.ForeignKey(%s, %s)""" % (name, point_to, kwargs)
+        else:
+            return """
+    %s = models.ForeignKey(%s)""" % (name, point_to)
     
     def _gen_char_field(self, name, **kwargs):
         if "max_length" not in kwargs:
@@ -59,7 +70,7 @@ class %s(models.Model):
             for k, v in kwargs.iteritems():
                 kwargs_string += "%s=%s, " % (k, v)
         return """
-    %s = models.BooleanField(%s)""" % (name, kwargs_string)
+    %s = models.NullBooleanField(%s)""" % (name, kwargs_string)
 
     def _gen_date_field(self, name, **kwargs):
         if "blank" not in kwargs:
@@ -74,6 +85,8 @@ class %s(models.Model):
 
     def gen_fields(self):
         fields_text = ""
+        for pk_field in self.pks:
+            fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to)
         for field in self.fields:
             # print field.__dict__
             if field.typ == "Char" or field.typ == "String":

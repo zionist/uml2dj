@@ -44,7 +44,7 @@ def parse(options, logger, args):
                     # find packagEdelement with this type
                     el = ctxt.xpathEval('//packagedElement[@xmi:id="%s"]' % typ)
                     pk_field_obj = PkField(prop_to_str(field.hasProp("name")))
-                    pk_field_obj.point_to = PkField(prop_to_str(el[0].hasProp("name")))
+                    pk_field_obj.point_to = prop_to_str(el[0].hasProp("name"))
                     model_obj.pks.append(pk_field_obj)
                 # We have no type attr, but we have child type tag for simple type
                 else:
