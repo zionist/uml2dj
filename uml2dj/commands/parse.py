@@ -24,6 +24,7 @@ def parse(options, logger, args):
 
     base_models = []
     child_models = []
+    choices = []
     doc = libxml2.parseFile(args[0])
     ctxt = doc.xpathNewContext()
     # for correct work with attrs in different xml namespace
@@ -54,6 +55,10 @@ def parse(options, logger, args):
                 # We have no type attr, but we have child type tag for simple type
                 else:
                     field_obj = Field(prop_to_str(field.hasProp("name")))
+                    # Find all choices if they are for this field. Choice name should be like FIELD_NAME_CHOICES
+                    choice = ctxt.xpathEval('//ownedComment[contains(@body, "%s_CHOICES")]' % field_obj.name.upper())
+                    if choice:
+                        field_obj.choices = prop_to_str(choice[0].hasProp("body"))
                     # Find all comments and convert them to help_text
                     comment = field.xpathEval("ownedComment")
                     if comment:
@@ -75,7 +80,15 @@ def parse(options, logger, args):
         else:
             child_models.append(model_obj)
     # sort models. Base classes first
-    for model in base_models:
+    models = []
+    models.extend(base_models)
+    models.extend(child_models)
+    for model in models:
         print model.gen_fields()
-    for model in child_models:
-        print model.gen_fields()
+
+    # print choices
+    for model in models:
+        for field in model.fields:
+            if field.choices:
+                print re.sub(r':', ' =', field.choices)
+    

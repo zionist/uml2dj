@@ -6,6 +6,7 @@ class Field:
         self.name = name
         self.typ = ""
         self.help_text  = ""
+        self.choices = ""
 
 
 class PkField:
@@ -25,6 +26,9 @@ class Model:
 
     def _gen_header(self):
         meta_string = ""
+        unicode_string = """
+    def __unicode__(self):
+        return '%s' % self.id"""
         if self.name.startswith("Base"):
             meta_string = """
     class Meta:
@@ -37,14 +41,14 @@ class Model:
         if not self.parents:
             return """
 class %s(models.Model):
-    %s""" % (self.name, meta_string)
+    %s %s""" % (self.name, meta_string, unicode_string)
         else:
             parent_header = ""
             for parent in self.parents:
                 parent_header += "%s, " % parent
                 return """
 class %s(%s):
-        %s""" % (self.name, parent_header, meta_string)
+        %s %s""" % (self.name, parent_header, meta_string, unicode_string)
 
     def _gen_pk_field(self, name, point_to, **kwargs):
         kwargs_string = ""
@@ -120,16 +124,18 @@ class %s(%s):
             else:
                 fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to)
         for field in self.fields:
-            # print field.__dict__
             if field.typ == "Char" or field.typ == "String":
                 if field.help_text:
                     fields_text += self._gen_char_field(field.name, help_text='_(u"%s")' % field.help_text, verbose_name='_(u"%s")' % field.help_text)
                 else:
                     fields_text += self._gen_char_field(field.name)
             if field.typ == "Integer":
-                    fields_text += self._gen_integer_field(field.name)
+                kwargs = {}
+                if field.choices:
+                    kwargs["choices"] = field.choices.split(":")[0]
+                fields_text += self._gen_integer_field(field.name, **kwargs)
             if field.typ == "Boolean":
-                    fields_text += self._gen_bolean_field(field.name)
+                fields_text += self._gen_bolean_field(field.name)
             if field.typ == "ByteArray":
-                    fields_text += self._gen_date_time_field(field.name)
+                fields_text += self._gen_date_time_field(field.name)
         return "%s %s" % (self._gen_header(), fields_text)
