@@ -3,13 +3,15 @@ import os
 import libxml2;
 from optparse import OptionParser
 
-from uml2dj.common.model import Model
+from uml2dj.common.model import Model, Field, PkField
 
 # value of property
 def prop_to_str(s):
     s = s.__str__().split("=")[1]
     # remove duoble quotes
     s = re.sub(r'^"|"$', '', s)
+    # remove html tags for help_text
+    s = re.sub(r'&lt.*$', '', s)
     return s
 
 def parse(options, logger, args):
@@ -36,27 +38,33 @@ def parse(options, logger, args):
             for field in model.xpathEval("ownedAttribute"):
                 typ = field.hasProp("type")
                 # We have type attr so this is the link (pk) to another class
-                field_name = prop_to_str(field.hasProp("name"))
                 # find primary keys to point to
                 if typ:
                     typ = prop_to_str(typ)
                     # find packagEdelement with this type
                     el = ctxt.xpathEval('//packagedElement[@xmi:id="%s"]' % typ)
-                    pk_name = prop_to_str(el[0].hasProp("name"))
-                    model_obj.pks.append({field_name: pk_name})
+                    pk_field_obj = PkField(prop_to_str(field.hasProp("name")))
+                    pk_field_obj.point_to = PkField(prop_to_str(el[0].hasProp("name")))
+                    model_obj.pks.append(pk_field_obj)
                 # We have no type attr, but we have child type tag for simple type
                 else:
-                    field.hasProp("name")
+                    field_obj = Field(prop_to_str(field.hasProp("name")))
+                    # Find all comments and convert them to help_text
+                    comment = field.xpathEval("ownedComment")
+                    if comment:
+                        field_obj.help_text = ('"%s"' % prop_to_str(comment[0].hasProp("body")))
                     for simple_type in field.xpathEval("type"):
                         # get type from href attr
                         simple_type = prop_to_str(simple_type.hasProp("href"))
                         m = re.search(r'^.*//(\D+)', simple_type)
                         if m:
-                            model_obj.fields.append({field_name: m.group(1)})
+                            field_obj.typ = m.group(1)
+                            model_obj.fields.append(field_obj)
             # find parents
             for parent in model.xpathEval("generalization"):
                 general = prop_to_str(parent.hasProp("general"))
                 parent = ctxt.xpathEval('//packagedElement[@xmi:id="%s"]' % general)
                 model_obj.parents.append(prop_to_str(parent[0].hasProp("name")))
-                            
         models.append(model_obj)
+        # print model_obj.__dict__
+    print models[0].gen_fields()
