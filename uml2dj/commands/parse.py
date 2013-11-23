@@ -48,7 +48,7 @@ def parse(options, logger, args):
                     # Find all comments and convert them to help_text
                     comment = field.xpathEval("ownedComment")
                     if comment:
-                        pk_field_obj.help_text = ('"%s"' % prop_to_str(comment[0].hasProp("body")))
+                        pk_field_obj.help_text = ('%s' % prop_to_str(comment[0].hasProp("body")))
                     pk_field_obj.point_to = prop_to_str(el[0].hasProp("name"))
                     model_obj.pks.append(pk_field_obj)
                 # We have no type attr, but we have child type tag for simple type
@@ -57,7 +57,7 @@ def parse(options, logger, args):
                     # Find all comments and convert them to help_text
                     comment = field.xpathEval("ownedComment")
                     if comment:
-                        field_obj.help_text = ('"%s"' % prop_to_str(comment[0].hasProp("body")))
+                        field_obj.help_text = ('%s' % prop_to_str(comment[0].hasProp("body")))
                     for simple_type in field.xpathEval("type"):
                         # get type from href attr
                         simple_type = prop_to_str(simple_type.hasProp("href"))

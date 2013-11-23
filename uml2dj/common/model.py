@@ -99,22 +99,37 @@ class %s(%s):
         return """
     %s = models.DateField(%s)""" % (name, kwargs_string)
 
+    def _gen_date_time_field(self, name, **kwargs):
+        if "blank" not in kwargs:
+            kwargs["blank"] = "True"
+        if "null" not in kwargs:
+            kwargs["null"] = "True"
+        if "auto_now" not in kwargs:
+            kwargs["auto_now"]="False"
+        kwargs_string = ""
+        for k, v in kwargs.iteritems():
+            kwargs_string += "%s=%s, " % (k, v)
+        return """
+    %s = models.DateTimeField(%s)""" % (name, kwargs_string)
+
     def gen_fields(self):
         fields_text = "\n"
         for pk_field in self.pks:
             if pk_field.help_text:
-                fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to, help_text=pk_field.help_text, verbose_name=pk_field.help_text)
+                fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to, help_text='_(u"%s")' % pk_field.help_text, verbose_name='_(u"%s")' % pk_field.help_text)
             else:
                 fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to)
         for field in self.fields:
             # print field.__dict__
             if field.typ == "Char" or field.typ == "String":
                 if field.help_text:
-                    fields_text += self._gen_char_field(field.name, help_text=field.help_text, verbose_name=field.help_text)
+                    fields_text += self._gen_char_field(field.name, help_text='_(u"%s")' % field.help_text, verbose_name='_(u"%s")' % field.help_text)
                 else:
                     fields_text += self._gen_char_field(field.name)
             if field.typ == "Integer":
                     fields_text += self._gen_integer_field(field.name)
             if field.typ == "Boolean":
                     fields_text += self._gen_bolean_field(field.name)
+            if field.typ == "ByteArray":
+                    fields_text += self._gen_date_time_field(field.name)
         return "%s %s" % (self._gen_header(), fields_text)
