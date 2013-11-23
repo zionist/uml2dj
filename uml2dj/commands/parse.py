@@ -22,7 +22,8 @@ def parse(options, logger, args):
     if len(args) != 1 or not os.path.isfile(args[0]):
         print "Please specify one correct file for parse"
 
-    models = []
+    base_models = []
+    child_models = []
     doc = libxml2.parseFile(args[0])
     ctxt = doc.xpathNewContext()
     # for correct work with attrs in different xml namespace
@@ -69,6 +70,12 @@ def parse(options, logger, args):
                 general = prop_to_str(parent.hasProp("general"))
                 parent = ctxt.xpathEval('//packagedElement[@xmi:id="%s"]' % general)
                 model_obj.parents.append(prop_to_str(parent[0].hasProp("name")))
-        models.append(model_obj)
-        print model_obj.gen_fields()
-    #models[0].gen_fields()
+        if model_obj.name.startswith("Base"):
+            base_models.append(model_obj)
+        else:
+            child_models.append(model_obj)
+    # sort models. Base classes first
+    for model in base_models:
+        print model.gen_fields()
+    for model in child_models:
+        print model.gen_fields()
