@@ -66,5 +66,5 @@ def parse(options, logger, args):
                 parent = ctxt.xpathEval('//packagedElement[@xmi:id="%s"]' % general)
                 model_obj.parents.append(prop_to_str(parent[0].hasProp("name")))
         models.append(model_obj)
-        # print model_obj.__dict__
-    print models[0].gen_fields()
+        model_obj.gen_fields()
+    #print models[0].gen_fields()
