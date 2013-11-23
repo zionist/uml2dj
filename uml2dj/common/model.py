@@ -23,11 +23,27 @@ class Model:
         self.pks = []
 
     def _gen_header(self):
-        return """
-class %s(models.Model):
+        meta_string = ""
+        if self.name.startswith("Base"):
+            meta_string = """
+    class Meta:
+        abstruct = True"""
+        else:
+            meta_string = """
     class Meta:
         app_label = "core"
-        verbose_name = "%s" """ % (self.name, self.name)
+        verbose_name = "%s" """ % (self.name)
+        if not self.parents:
+            return """
+class %s(models.Model):
+    %s""" % (self.name, meta_string)
+        else:
+            parent_header = ""
+            for parent in self.parents:
+                parent_header += "%s, " % parent
+                return """
+class %s(%s):
+        %s""" % (self.name, parent_header, meta_string)
 
     def _gen_pk_field(self, name, point_to, **kwargs):
         kwargs_string = ""
@@ -84,7 +100,7 @@ class %s(models.Model):
     %s = models.DateField(%s)""" % (name, kwargs_string)
 
     def gen_fields(self):
-        fields_text = ""
+        fields_text = "\n"
         for pk_field in self.pks:
             fields_text += self._gen_pk_field(pk_field.name, pk_field.point_to)
         for field in self.fields:
@@ -98,5 +114,4 @@ class %s(models.Model):
                     fields_text += self._gen_integer_field(field.name)
             if field.typ == "Boolean":
                     fields_text += self._gen_bolean_field(field.name)
-        print self._gen_header()
-        print fields_text
+        return "%s %s" % (self._gen_header(), fields_text)
