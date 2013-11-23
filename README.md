@@ -6,9 +6,9 @@ Tool for convertation from uml xml (UML version 2.*) to django models with pk an
 
 Type mapping:
 
-Integer -> IntegerField
-Date -> DateField
-Char -> CharField
-String -> CharField
-ByteArray -> DateTimeField
+* Integer -> IntegerField
+* Date -> DateField
+* Char -> CharField
+* String -> CharField
+* ByteArray -> DateTimeField
 
