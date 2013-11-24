@@ -73,8 +73,8 @@ def parse(options, logger, parse_file):
             # find parents
             for parent in model.xpathEval("generalization"):
                 general = prop_to_str(parent.hasProp("general"))
-                parent = ctxt.xpathEval('//packagedElement[@xmi:id="%s"]' % general)
-                model_obj.parents.append(prop_to_str(parent[0].hasProp("name")))
+                el = ctxt.xpathEval('//packagedElement[@xmi:id="%s"]' % general)
+                model_obj.parents.append(prop_to_str(el[0].hasProp("name")))
         if model_obj.name.startswith("Base"):
             base_models.append(model_obj)
         else:

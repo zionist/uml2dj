@@ -50,11 +50,15 @@ class %s(models.Model):
             parent_header = ""
             for parent in self.parents:
                 parent_header += "%s, " % parent
-                return """
+            return """
 class %s(%s):
-        %s %s""" % (self.name, parent_header, meta_string, unicode_string)
+    %s %s""" % (self.name, parent_header, meta_string, unicode_string)
 
     def _gen_pk_field(self, name, point_to, **kwargs):
+        if "blank" not in kwargs:
+            kwargs["blank"] = "True"
+        if "null" not in kwargs:
+            kwargs["null"] = "True"
         kwargs_string = ""
         if kwargs:
             for k, v in kwargs.iteritems():
@@ -113,7 +117,7 @@ class %s(%s):
         if "null" not in kwargs:
             kwargs["null"] = "True"
         if "auto_now" not in kwargs:
-            kwargs["auto_now"]="False"
+            kwargs["auto_now"]="True"
         kwargs_string = ""
         for k, v in kwargs.iteritems():
             kwargs_string += "%s=%s, " % (k, v)
