@@ -90,6 +90,17 @@ class %s(%s):
         return """
     %s = models.IntegerField(%s)""" % (name, kwargs_string)
 
+    def _gen_float_field(self, name, **kwargs):
+        if "blank" not in kwargs:
+            kwargs["blank"] = "True"
+        if "null" not in kwargs:
+            kwargs["null"] = "True"
+        kwargs_string = ""
+        for k, v in kwargs.iteritems():
+            kwargs_string += "%s=%s, " % (k, v)
+        return """
+    %s = models.FloatField(%s)""" % (name, kwargs_string)
+
     def _gen_bolean_field(self, name, **kwargs):
         if "blank" not in kwargs:
             kwargs["blank"] = "True"
@@ -157,6 +168,10 @@ admin.site.register(%s, %sAdmin)""" % (self.name, self.name, self.name)
                 fields_text += self._gen_integer_field(field.name, **kwargs)
             if field.typ == "Boolean":
                 fields_text += self._gen_bolean_field(field.name)
+            if field.typ == "Real":
+                fields_text += self._gen_float_field(field.name)
+            if field.typ == "Date":
+                fields_text += self._gen_date_field(field.name)
             if field.typ == "ByteArray":
                 fields_text += self._gen_date_time_field(field.name)
         return "%s %s" % (self._gen_header(), fields_text)
