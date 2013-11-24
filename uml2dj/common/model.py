@@ -90,6 +90,19 @@ class %s(%s):
         return """
     %s = models.IntegerField(%s)""" % (name, kwargs_string)
 
+    def _gen_file_field(self, name, **kwargs):
+        if "blank" not in kwargs:
+            kwargs["blank"] = "True"
+        if "null" not in kwargs:
+            kwargs["null"] = "True"
+        if "max_length" not in kwargs:
+            kwargs["max_length"] = "2048"
+        kwargs_string = ""
+        for k, v in kwargs.iteritems():
+            kwargs_string += "%s=%s, " % (k, v)
+        return """
+    %s = models.FileField(%s)""" % (name, kwargs_string)
+
     def _gen_float_field(self, name, **kwargs):
         if "blank" not in kwargs:
             kwargs["blank"] = "True"
@@ -170,6 +183,8 @@ admin.site.register(%s, %sAdmin)""" % (self.name, self.name, self.name)
                 fields_text += self._gen_bolean_field(field.name)
             if field.typ == "Real":
                 fields_text += self._gen_float_field(field.name)
+            if field.typ == "Long":
+                fields_text += self._gen_file_field(field.name)
             if field.typ == "Date":
                 fields_text += self._gen_date_field(field.name)
             if field.typ == "ByteArray":
